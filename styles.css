@@ -1027,11 +1027,23 @@ a:focus {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 16px;
-  max-width: 92vw;
-  max-height: 92vh;
+  width: 85vw;
+  height: 85vh;
+  max-width: 85vw;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+@media (max-width: 576px) {
+  .mermaid-modal-content {
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    padding: 10px;
+  }
 }
 
 .mermaid-modal-header {
