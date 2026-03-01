@@ -1843,6 +1843,31 @@ This is a fully client-side application. Your content never leaves your browser 
     }
   });
 
+  document.getElementById('mermaid-modal-copy').addEventListener('click', async function() {
+    if (!modalCurrentSvgEl) return;
+    const btn = this;
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+    try {
+      const canvas = await svgToCanvas(modalCurrentSvgEl);
+      canvas.toBlob(async blob => {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+        } catch (clipErr) {
+          console.error('Clipboard write failed:', clipErr);
+          btn.innerHTML = '<i class="bi bi-x-lg"></i>';
+        }
+        setTimeout(() => { btn.innerHTML = original; }, 1800);
+      }, 'image/png');
+    } catch (e) {
+      console.error('Modal copy failed:', e);
+      btn.innerHTML = original;
+    }
+  });
+
   document.getElementById('mermaid-modal-download-svg').addEventListener('click', function() {
     if (!modalCurrentSvgEl) return;
     const serialized = new XMLSerializer().serializeToString(modalCurrentSvgEl);
@@ -1885,7 +1910,7 @@ This is a fully client-side application. Your content never leaves your browser 
       btnCopy.className = 'mermaid-toolbar-btn';
       btnCopy.title = 'Copy image to clipboard';
       btnCopy.setAttribute('aria-label', 'Copy image to clipboard');
-      btnCopy.innerHTML = '<i class="bi bi-clipboard-image"></i>';
+      btnCopy.innerHTML = '<i class="bi bi-clipboard-image"></i> Copy';
       btnCopy.addEventListener('click', () => copyMermaidImage(container, btnCopy));
 
       const btnSvg = document.createElement('button');
@@ -1896,8 +1921,8 @@ This is a fully client-side application. Your content never leaves your browser 
       btnSvg.addEventListener('click', () => downloadMermaidSvg(container, btnSvg));
 
       toolbar.appendChild(btnZoom);
-      toolbar.appendChild(btnPng);
       toolbar.appendChild(btnCopy);
+      toolbar.appendChild(btnPng);
       toolbar.appendChild(btnSvg);
       container.appendChild(toolbar);
     });
