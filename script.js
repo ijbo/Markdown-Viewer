@@ -1915,7 +1915,7 @@ This is a fully client-side application. Your content never leaves your browser 
   // ENCRYPTED SHARING VIA GITHUB
   // ========================================
 
-  const SHARE_BASE_URL = 'https://markdownviewer.pages.dev/';
+  const SHARE_BASE_URL = 'https://ijbo.github.io/mdView/';
   const GITHUB_API_BASE = 'https://api.github.com';
 
   // --- GitHub Config Management ---
