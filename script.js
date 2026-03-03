@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const dropzone = document.getElementById("dropzone");
   const closeDropzoneBtn = document.getElementById("close-dropzone");
   const toggleSyncButton = document.getElementById("toggle-sync");
-  const editorPane = document.getElementById("markdown-editor");
+  const editorPane = markdownEditor; // same element, alias for scroll sync
   const previewPane = document.querySelector(".preview-pane");
   const readingTimeElement = document.getElementById("reading-time");
   const wordCountElement = document.getElementById("word-count");
@@ -43,43 +43,42 @@ document.addEventListener("DOMContentLoaded", function () {
   let editorWidthPercent = 50; // Default 50%
   const MIN_PANE_PERCENT = 20; // Minimum 20% width
 
-  const mobileMenuToggle    = document.getElementById("mobile-menu-toggle");
-  const mobileMenuPanel     = document.getElementById("mobile-menu-panel");
-  const mobileMenuOverlay   = document.getElementById("mobile-menu-overlay");
-  const mobileCloseMenu     = document.getElementById("close-mobile-menu");
-  const mobileReadingTime   = document.getElementById("mobile-reading-time");
-  const mobileWordCount     = document.getElementById("mobile-word-count");
-  const mobileCharCount     = document.getElementById("mobile-char-count");
-  const mobileToggleSync    = document.getElementById("mobile-toggle-sync");
-  const mobileImportBtn     = document.getElementById("mobile-import-button");
-  const mobileExportMd      = document.getElementById("mobile-export-md");
-  const mobileExportHtml    = document.getElementById("mobile-export-html");
-  const mobileExportPdf     = document.getElementById("mobile-export-pdf");
-  const mobileCopyMarkdown  = document.getElementById("mobile-copy-markdown");
-  const mobileThemeToggle   = document.getElementById("mobile-theme-toggle");
+  const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+  const mobileMenuPanel = document.getElementById("mobile-menu-panel");
+  const mobileMenuOverlay = document.getElementById("mobile-menu-overlay");
+  const mobileCloseMenu = document.getElementById("close-mobile-menu");
+  const mobileReadingTime = document.getElementById("mobile-reading-time");
+  const mobileWordCount = document.getElementById("mobile-word-count");
+  const mobileCharCount = document.getElementById("mobile-char-count");
+  const mobileToggleSync = document.getElementById("mobile-toggle-sync");
+  const mobileImportBtn = document.getElementById("mobile-import-button");
+  const mobileExportMd = document.getElementById("mobile-export-md");
+  const mobileExportHtml = document.getElementById("mobile-export-html");
+  const mobileExportPdf = document.getElementById("mobile-export-pdf");
+  const mobileCopyMarkdown = document.getElementById("mobile-copy-markdown");
+  const mobileThemeToggle = document.getElementById("mobile-theme-toggle");
 
-  // Check dark mode preference first for proper initialization
+  // Check saved theme preference, then fall back to OS preference
+  const savedTheme = localStorage.getItem('markdown-viewer-theme');
   const prefersDarkMode =
     window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
-  
-  document.documentElement.setAttribute(
-    "data-theme",
-    prefersDarkMode ? "dark" : "light"
-  );
-  
-  themeToggle.innerHTML = prefersDarkMode
+  const initialTheme = savedTheme || (prefersDarkMode ? "dark" : "light");
+
+  document.documentElement.setAttribute("data-theme", initialTheme);
+
+  themeToggle.innerHTML = initialTheme === "dark"
     ? '<i class="bi bi-sun"></i>'
     : '<i class="bi bi-moon"></i>';
 
   const initMermaid = () => {
     const currentTheme = document.documentElement.getAttribute("data-theme");
     const mermaidTheme = currentTheme === "dark" ? "dark" : "default";
-    
+
     mermaid.initialize({
       startOnLoad: false,
       theme: mermaidTheme,
-      securityLevel: 'loose',
+      securityLevel: 'strict',
       flowchart: { useMaxWidth: true, htmlLabels: true },
       fontSize: 16
     });
@@ -95,7 +94,6 @@ document.addEventListener("DOMContentLoaded", function () {
     gfm: true,
     breaks: false,
     pedantic: false,
-    sanitize: false,
     smartypants: false,
     xhtml: false,
     headerIds: true,
@@ -108,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const uniqueId = 'mermaid-diagram-' + Math.random().toString(36).substr(2, 9);
       return `<div class="mermaid-container"><div class="mermaid" id="${uniqueId}">${code}</div></div>`;
     }
-    
+
     const validLanguage = hljs.getLanguage(language) ? language : "plaintext";
     const highlightedCode = hljs.highlight(code, {
       language: validLanguage,
@@ -272,7 +270,7 @@ Create bullet points:
 
 ### **Links and Images**
 
-Add a [link](https://github.com/ThisIs-Developer/Markdown-Viewer) to important resources.
+Add a [link](https://github.com/ijbo/mdView) to important resources.
 
 Embed an image:
 ![Markdown Logo](https://example.com/logo.png)
@@ -296,7 +294,7 @@ This is a fully client-side application. Your content never leaves your browser 
       const html = marked.parse(markdown);
       const sanitizedHtml = DOMPurify.sanitize(html, {
         ADD_TAGS: ['mjx-container'],
-        ADD_ATTR: ['id', 'class', 'style']
+        ADD_ATTR: ['id', 'class']
       });
       markdownPreview.innerHTML = sanitizedHtml;
 
@@ -311,14 +309,11 @@ This is a fully client-side application. Your content never leaves your browser 
       });
 
       processEmojis(markdownPreview);
-      
-      // Reinitialize mermaid with current theme before rendering diagrams
-      initMermaid();
-      
+
       try {
         const mermaidNodes = markdownPreview.querySelectorAll('.mermaid');
         if (mermaidNodes.length > 0) {
-          Promise.resolve(mermaid.init(undefined, mermaidNodes))
+          mermaid.run({ nodes: mermaidNodes, suppressErrors: true })
             .then(() => addMermaidToolbars())
             .catch((e) => {
               console.warn("Mermaid rendering failed:", e);
@@ -328,7 +323,7 @@ This is a fully client-side application. Your content never leaves your browser 
       } catch (e) {
         console.warn("Mermaid rendering failed:", e);
       }
-      
+
       if (window.MathJax) {
         try {
           MathJax.typesetPromise([markdownPreview]).catch((err) => {
@@ -342,16 +337,23 @@ This is a fully client-side application. Your content never leaves your browser 
       updateDocumentStats();
     } catch (e) {
       console.error("Markdown rendering failed:", e);
-      markdownPreview.innerHTML = `<div class="alert alert-danger">
-              <strong>Error rendering markdown:</strong> ${e.message}
-          </div>
-          <pre>${markdownEditor.value}</pre>`;
+      markdownPreview.textContent = '';
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'alert alert-danger';
+      const strong = document.createElement('strong');
+      strong.textContent = 'Error rendering markdown: ';
+      errorDiv.appendChild(strong);
+      errorDiv.appendChild(document.createTextNode(e.message));
+      const pre = document.createElement('pre');
+      pre.textContent = markdownEditor.value;
+      markdownPreview.appendChild(errorDiv);
+      markdownPreview.appendChild(pre);
     }
   }
 
   function importMarkdownFile(file) {
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
       markdownEditor.value = e.target.result;
       renderMarkdown();
       dropzone.style.display = "none";
@@ -366,7 +368,7 @@ This is a fully client-side application. Your content never leaves your browser 
       null,
       false
     );
-    
+
     const textNodes = [];
     let node;
     while ((node = walker.nextNode())) {
@@ -379,25 +381,25 @@ This is a fully client-side application. Your content never leaves your browser 
         }
         parent = parent.parentNode;
       }
-      
+
       if (!isInCode && node.nodeValue.includes(':')) {
         textNodes.push(node);
       }
     }
-    
+
     textNodes.forEach(textNode => {
       const text = textNode.nodeValue;
       const emojiRegex = /:([\w+-]+):/g;
-      
+
       let match;
       let lastIndex = 0;
       let result = '';
       let hasEmoji = false;
-      
+
       while ((match = emojiRegex.exec(text)) !== null) {
         const shortcode = match[1];
         const emoji = joypixels.shortnameToUnicode(`:${shortcode}:`);
-        
+
         if (emoji !== `:${shortcode}:`) { // If conversion was successful
           hasEmoji = true;
           result += text.substring(lastIndex, match.index) + emoji;
@@ -407,11 +409,11 @@ This is a fully client-side application. Your content never leaves your browser 
           lastIndex = emojiRegex.lastIndex;
         }
       }
-      
+
       if (hasEmoji) {
         result += text.substring(lastIndex);
         const span = document.createElement('span');
-        span.innerHTML = result;
+        span.textContent = result;
         textNode.parentNode.replaceChild(span, textNode);
       }
     });
@@ -486,15 +488,13 @@ This is a fully client-side application. Your content never leaves your browser 
   function toggleSyncScrolling() {
     syncScrollingEnabled = !syncScrollingEnabled;
     if (syncScrollingEnabled) {
-      toggleSyncButton.innerHTML = '<i class="bi bi-link-45deg"></i> Sync Off';
-      toggleSyncButton.classList.add("sync-disabled");
-      toggleSyncButton.classList.remove("sync-enabled");
-      toggleSyncButton.classList.add("border-primary");
-    } else {
       toggleSyncButton.innerHTML = '<i class="bi bi-link"></i> Sync On';
       toggleSyncButton.classList.add("sync-enabled");
       toggleSyncButton.classList.remove("sync-disabled");
-      toggleSyncButton.classList.remove("border-primary");
+    } else {
+      toggleSyncButton.innerHTML = '<i class="bi bi-link-45deg"></i> Sync Off';
+      toggleSyncButton.classList.add("sync-disabled");
+      toggleSyncButton.classList.remove("sync-enabled");
     }
   }
 
@@ -580,6 +580,21 @@ This is a fully client-side application. Your content never leaves your browser 
     resizeDivider.addEventListener('touchstart', startResizeTouch);
     document.addEventListener('touchmove', handleResizeTouch);
     document.addEventListener('touchend', stopResize);
+
+    // Keyboard support for accessibility (#21)
+    resizeDivider.addEventListener('keydown', function (e) {
+      if (currentViewMode !== 'split') return;
+      const step = 2; // 2% per keypress
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        editorWidthPercent = Math.max(MIN_PANE_PERCENT, editorWidthPercent - step);
+        applyPaneWidths();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        editorWidthPercent = Math.min(100 - MIN_PANE_PERCENT, editorWidthPercent + step);
+        applyPaneWidths();
+      }
+    });
   }
 
   function startResize(e) {
@@ -662,29 +677,28 @@ This is a fully client-side application. Your content never leaves your browser 
   mobileMenuOverlay.addEventListener("click", closeMobileMenu);
 
   function updateMobileStats() {
-    mobileCharCount.textContent   = charCountElement.textContent;
-    mobileWordCount.textContent   = wordCountElement.textContent;
+    mobileCharCount.textContent = charCountElement.textContent;
+    mobileWordCount.textContent = wordCountElement.textContent;
     mobileReadingTime.textContent = readingTimeElement.textContent;
   }
 
+  // Wrap updateDocumentStats to also update mobile stats
   const origUpdateStats = updateDocumentStats;
-  updateDocumentStats = function() {
-    origUpdateStats();
+  updateDocumentStats = function () {
+    origUpdateStats.call(this);
     updateMobileStats();
   };
 
   mobileToggleSync.addEventListener("click", () => {
     toggleSyncScrolling();
     if (syncScrollingEnabled) {
-      mobileToggleSync.innerHTML = '<i class="bi bi-link-45deg me-2"></i> Sync Off';
-      mobileToggleSync.classList.add("sync-disabled");
-      mobileToggleSync.classList.remove("sync-enabled");
-      mobileToggleSync.classList.add("border-primary");
-    } else {
       mobileToggleSync.innerHTML = '<i class="bi bi-link me-2"></i> Sync On';
       mobileToggleSync.classList.add("sync-enabled");
       mobileToggleSync.classList.remove("sync-disabled");
-      mobileToggleSync.classList.remove("border-primary");
+    } else {
+      mobileToggleSync.innerHTML = '<i class="bi bi-link-45deg me-2"></i> Sync Off';
+      mobileToggleSync.classList.add("sync-disabled");
+      mobileToggleSync.classList.remove("sync-enabled");
     }
   });
   mobileImportBtn.addEventListener("click", () => fileInput.click());
@@ -694,9 +708,12 @@ This is a fully client-side application. Your content never leaves your browser 
   mobileCopyMarkdown.addEventListener("click", () => copyMarkdownButton.click());
   mobileThemeToggle.addEventListener("click", () => {
     themeToggle.click();
-    mobileThemeToggle.innerHTML = themeToggle.innerHTML + " Toggle Dark Mode";
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    mobileThemeToggle.innerHTML = currentTheme === "dark"
+      ? '<i class="bi bi-sun me-2"></i> Light Mode'
+      : '<i class="bi bi-moon me-2"></i> Dark Mode';
   });
-  
+
   renderMarkdown();
   updateMobileStats();
 
@@ -708,7 +725,7 @@ This is a fully client-side application. Your content never leaves your browser 
 
   // View Mode Button Event Listeners - Story 1.1
   viewModeButtons.forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
       const mode = this.getAttribute('data-mode');
       setViewMode(mode);
     });
@@ -716,7 +733,7 @@ This is a fully client-side application. Your content never leaves your browser 
 
   // Story 1.4: Mobile View Mode Button Event Listeners
   mobileViewModeButtons.forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
       const mode = this.getAttribute('data-mode');
       setViewMode(mode);
       closeMobileMenu();
@@ -724,30 +741,35 @@ This is a fully client-side application. Your content never leaves your browser 
   });
 
   markdownEditor.addEventListener("input", debouncedRender);
-  
+
   // Tab key handler to insert indentation instead of moving focus
-  markdownEditor.addEventListener("keydown", function(e) {
+  // Escape key releases focus so keyboard-only users aren't trapped (#20)
+  markdownEditor.addEventListener("keydown", function (e) {
+    if (e.key === 'Escape') {
+      this.blur();
+      return;
+    }
     if (e.key === 'Tab') {
       e.preventDefault();
-      
+
       const start = this.selectionStart;
       const end = this.selectionEnd;
       const value = this.value;
-      
+
       // Insert 2 spaces
       const indent = '  '; // 2 spaces
-      
+
       // Update textarea value
       this.value = value.substring(0, start) + indent + value.substring(end);
-      
+
       // Update cursor position
       this.selectionStart = this.selectionEnd = start + indent.length;
-      
+
       // Trigger input event to update preview
       this.dispatchEvent(new Event('input'));
     }
   });
-  
+
   editorPane.addEventListener("scroll", syncEditorToPreview);
   previewPane.addEventListener("scroll", syncPreviewToEditor);
   toggleSyncButton.addEventListener("click", toggleSyncScrolling);
@@ -757,13 +779,16 @@ This is a fully client-side application. Your content never leaves your browser 
         ? "light"
         : "dark";
     document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem('markdown-viewer-theme', theme);
 
     if (theme === "dark") {
       themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
     } else {
       themeToggle.innerHTML = '<i class="bi bi-moon"></i>';
     }
-    
+
+    // Reinitialize mermaid with new theme
+    initMermaid();
     renderMarkdown();
   });
 
@@ -796,8 +821,8 @@ This is a fully client-side application. Your content never leaves your browser 
       const markdown = markdownEditor.value;
       const html = marked.parse(markdown);
       const sanitizedHtml = DOMPurify.sanitize(html, {
-        ADD_TAGS: ['mjx-container'], 
-        ADD_ATTR: ['id', 'class', 'style']
+        ADD_TAGS: ['mjx-container'],
+        ADD_ATTR: ['id', 'class']
       });
       const isDarkTheme =
         document.documentElement.getAttribute("data-theme") === "dark";
@@ -811,9 +836,8 @@ This is a fully client-side application. Your content never leaves your browser 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown Export</title>
   <link rel="stylesheet" href="${cssTheme}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/${
-    isDarkTheme ? "github-dark" : "github"
-  }.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/${isDarkTheme ? "github-dark" : "github"
+        }.min.css">
   <style>
       body {
           background-color: ${isDarkTheme ? "#0d1117" : "#ffffff"};
@@ -1014,16 +1038,9 @@ This is a fully client-side application. Your content never leaves your browser 
     try {
       // Step 1: Identify all graphic elements
       const graphics = identifyGraphicElements(tempElement);
-      console.log('Step 1 - Graphics found:', graphics.length, graphics.map(g => g.type));
 
       // Step 2: Calculate positions for each element
       const elementsWithPositions = calculateElementPositions(graphics, tempElement);
-      console.log('Step 2 - Element positions:', elementsWithPositions.map(e => ({
-        type: e.type,
-        top: Math.round(e.top),
-        height: Math.round(e.height),
-        bottom: Math.round(e.bottom)
-      })));
 
       // Step 3: Calculate page boundaries using the element's ACTUAL width
       const totalHeight = tempElement.scrollHeight;
@@ -1034,16 +1051,8 @@ This is a fully client-side application. Your content never leaves your browser 
         PAGE_CONFIG
       );
 
-      console.log('Step 3 - Page boundaries:', {
-        elementWidth,
-        totalHeight,
-        pageHeightPx: Math.round(pageHeightPx),
-        boundaries: pageBoundaries.map(b => Math.round(b))
-      });
-
       // Step 4: Detect split elements
       const splitElements = detectSplitElements(elementsWithPositions, pageBoundaries);
-      console.log('Step 4 - Split elements detected:', splitElements.length);
 
       // Calculate page count
       const pageCount = pageBoundaries.length + 1;
@@ -1113,23 +1122,12 @@ This is a fully client-side application. Your content never leaves your browser 
       const remainingSpace = currentPageBottom - item.top;
       const remainingRatio = remainingSpace / pageHeightPx;
 
-      console.log('Processing split element:', {
-        type: item.type,
-        top: Math.round(item.top),
-        height: Math.round(item.height),
-        splitPageIndex: item.splitPageIndex,
-        currentPageBottom: Math.round(currentPageBottom),
-        remainingSpace: Math.round(remainingSpace),
-        remainingRatio: remainingRatio.toFixed(2)
-      });
-
       // Task 4: Whitespace optimization
       // If remaining space is more than threshold and element almost fits, skip
       // (Will be handled by Story 1.3 scaling instead)
       if (remainingRatio > PAGE_BREAK_THRESHOLD) {
         const scaledHeight = item.height * 0.9; // 90% scale
         if (scaledHeight <= remainingSpace) {
-          console.log('  -> Skipping (can fit with 90% scaling)');
           continue;
         }
       }
@@ -1137,21 +1135,16 @@ This is a fully client-side application. Your content never leaves your browser 
       // Calculate margin needed to push element to next page
       const marginNeeded = currentPageBottom - item.top + 5; // 5px buffer
 
-      console.log('  -> Applying marginTop:', marginNeeded, 'px');
-
       // Determine which element to apply margin to
       // For SVG elements (Mermaid diagrams), apply to parent container for proper layout
       let targetElement = item.element;
       if (item.type === 'svg' && item.element.parentElement) {
         targetElement = item.element.parentElement;
-        console.log('  -> Using parent element:', targetElement.tagName, targetElement.className);
       }
 
       // Apply margin to push element to next page
       const currentMargin = parseFloat(targetElement.style.marginTop) || 0;
       targetElement.style.marginTop = `${currentMargin + marginNeeded}px`;
-
-      console.log('  -> Element after margin:', targetElement.tagName, 'marginTop =', targetElement.style.marginTop);
     }
   }
 
@@ -1204,12 +1197,6 @@ This is a fully client-side application. Your content never leaves your browser 
     if (iteration >= maxIterations) {
       console.warn('Page-break stabilization reached max iterations:', maxIterations);
     }
-
-    console.log('Page-break cascade complete:', {
-      iterations: iteration,
-      finalSplitCount: analysis.splitElements.length,
-      oversizedCount: analysis.oversizedElements ? analysis.oversizedElements.length : 0
-    });
 
     return analysis;
   }
@@ -1473,7 +1460,7 @@ This is a fully client-side application. Your content never leaves your browser 
       exportPdf.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Export';
       exportPdf.disabled = false;
 
-      const progressContainer = document.querySelector('div[style*="Preparing PDF"]');
+      const progressContainer = document.querySelector('div[style*="position: fixed"][style*="z-index: 9999"]');
       if (progressContainer) {
         document.body.removeChild(progressContainer);
       }
@@ -1513,7 +1500,7 @@ This is a fully client-side application. Your content never leaves your browser 
       }
     } catch (err) {
       console.error("Copy failed:", err);
-      alert("Failed to copy HTML: " + err.message);
+      alert("Failed to copy Markdown: " + err.message);
     }
   }
 
@@ -1560,8 +1547,8 @@ This is a fully client-side application. Your content never leaves your browser 
       fileInput.click();
     }
   });
-  closeDropzoneBtn.addEventListener("click", function(e) {
-    e.stopPropagation(); 
+  closeDropzoneBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
     dropzone.style.display = "none";
   });
 
@@ -1586,10 +1573,6 @@ This is a fully client-side application. Your content never leaves your browser 
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
       exportMd.click();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === "c") {
-      e.preventDefault();
-      copyMarkdownButton.click();
     }
     // Story 1.2: Only allow sync toggle shortcut when in split view
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S") {
@@ -1616,7 +1599,7 @@ This is a fully client-side application. Your content never leaves your browser 
     const clone = svgEl.cloneNode(true);
     // Ensure explicit width/height so the canvas has the right dimensions
     const bbox = svgEl.getBoundingClientRect();
-    if (!clone.getAttribute('width'))  clone.setAttribute('width',  Math.round(bbox.width));
+    if (!clone.getAttribute('width')) clone.setAttribute('width', Math.round(bbox.width));
     if (!clone.getAttribute('height')) clone.setAttribute('height', Math.round(bbox.height));
     const serialized = new XMLSerializer().serializeToString(clone);
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(serialized);
@@ -1629,11 +1612,11 @@ This is a fully client-side application. Your content never leaves your browser 
     return new Promise((resolve, reject) => {
       const bbox = svgEl.getBoundingClientRect();
       const scale = window.devicePixelRatio || 1;
-      const width  = Math.max(Math.round(bbox.width),  1);
+      const width = Math.max(Math.round(bbox.width), 1);
       const height = Math.max(Math.round(bbox.height), 1);
 
       const canvas = document.createElement('canvas');
-      canvas.width  = width  * scale;
+      canvas.width = width * scale;
       canvas.height = height * scale;
       const ctx = canvas.getContext('2d');
       ctx.scale(scale, scale);
@@ -1645,7 +1628,7 @@ This is a fully client-side application. Your content never leaves your browser 
       ctx.fillRect(0, 0, width, height);
 
       const img = new Image();
-      img.onload  = () => { ctx.drawImage(img, 0, 0, width, height); resolve(canvas); };
+      img.onload = () => { ctx.drawImage(img, 0, 0, width, height); resolve(canvas); };
       img.onerror = reject;
       img.src = svgToDataUrl(svgEl);
     });
@@ -1727,7 +1710,7 @@ This is a fully client-side application. Your content never leaves your browser 
   let modalDragStart = { x: 0, y: 0 };
   let modalCurrentSvgEl = null;
 
-  const mermaidZoomModal   = document.getElementById('mermaid-zoom-modal');
+  const mermaidZoomModal = document.getElementById('mermaid-zoom-modal');
   const mermaidModalDiagram = document.getElementById('mermaid-modal-diagram');
 
   function applyModalTransform() {
@@ -1761,9 +1744,9 @@ This is a fully client-side application. Your content never leaves your browser 
     // Remove fixed dimensions so it sizes naturally inside the modal
     svgClone.removeAttribute('width');
     svgClone.removeAttribute('height');
-    svgClone.style.width  = 'auto';
+    svgClone.style.width = 'auto';
     svgClone.style.height = 'auto';
-    svgClone.style.maxWidth  = '80vw';
+    svgClone.style.maxWidth = '80vw';
     svgClone.style.maxHeight = '60vh';
     svgClone.style.transformOrigin = 'center';
     mermaidModalDiagram.appendChild(svgClone);
@@ -1775,7 +1758,7 @@ This is a fully client-side application. Your content never leaves your browser 
   // Modal close button
   document.getElementById('mermaid-modal-close').addEventListener('click', closeMermaidModal);
   // Click backdrop to close
-  mermaidZoomModal.addEventListener('click', function(e) {
+  mermaidZoomModal.addEventListener('click', function (e) {
     if (e.target === mermaidZoomModal) closeMermaidModal();
   });
 
@@ -1794,7 +1777,7 @@ This is a fully client-side application. Your content never leaves your browser 
   });
 
   // Mouse-wheel zoom inside modal
-  mermaidModalDiagram.addEventListener('wheel', function(e) {
+  mermaidModalDiagram.addEventListener('wheel', function (e) {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.15 : -0.15;
     modalZoomScale = Math.min(Math.max(modalZoomScale + delta, 0.1), 10);
@@ -1802,18 +1785,18 @@ This is a fully client-side application. Your content never leaves your browser 
   }, { passive: false });
 
   // Drag to pan inside modal
-  mermaidModalDiagram.addEventListener('mousedown', function(e) {
+  mermaidModalDiagram.addEventListener('mousedown', function (e) {
     modalIsDragging = true;
     modalDragStart = { x: e.clientX - modalPanX, y: e.clientY - modalPanY };
     mermaidModalDiagram.classList.add('dragging');
   });
-  document.addEventListener('mousemove', function(e) {
+  document.addEventListener('mousemove', function (e) {
     if (!modalIsDragging) return;
     modalPanX = e.clientX - modalDragStart.x;
     modalPanY = e.clientY - modalDragStart.y;
     applyModalTransform();
   });
-  document.addEventListener('mouseup', function() {
+  document.addEventListener('mouseup', function () {
     if (modalIsDragging) {
       modalIsDragging = false;
       mermaidModalDiagram.classList.remove('dragging');
@@ -1821,7 +1804,7 @@ This is a fully client-side application. Your content never leaves your browser 
   });
 
   // Modal download buttons (operate on the currently displayed SVG)
-  document.getElementById('mermaid-modal-download-png').addEventListener('click', async function() {
+  document.getElementById('mermaid-modal-download-png').addEventListener('click', async function () {
     if (!modalCurrentSvgEl) return;
     const btn = this;
     const original = btn.innerHTML;
@@ -1843,7 +1826,7 @@ This is a fully client-side application. Your content never leaves your browser 
     }
   });
 
-  document.getElementById('mermaid-modal-copy').addEventListener('click', async function() {
+  document.getElementById('mermaid-modal-copy').addEventListener('click', async function () {
     if (!modalCurrentSvgEl) return;
     const btn = this;
     const original = btn.innerHTML;
@@ -1868,7 +1851,7 @@ This is a fully client-side application. Your content never leaves your browser 
     }
   });
 
-  document.getElementById('mermaid-modal-download-svg').addEventListener('click', function() {
+  document.getElementById('mermaid-modal-download-svg').addEventListener('click', function () {
     if (!modalCurrentSvgEl) return;
     const serialized = new XMLSerializer().serializeToString(modalCurrentSvgEl);
     const blob = new Blob([serialized], { type: 'image/svg+xml' });
@@ -1927,4 +1910,398 @@ This is a fully client-side application. Your content never leaves your browser 
       container.appendChild(toolbar);
     });
   }
+
+  // ========================================
+  // ENCRYPTED SHARING VIA GITHUB
+  // ========================================
+
+  const SHARE_BASE_URL = 'https://markdownviewer.pages.dev/';
+  const GITHUB_API_BASE = 'https://api.github.com';
+
+  // --- GitHub Config Management ---
+
+  function loadGitHubConfig() {
+    try {
+      const config = localStorage.getItem('markdown-viewer-github-config');
+      return config ? JSON.parse(config) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveGitHubConfig(config) {
+    localStorage.setItem('markdown-viewer-github-config', JSON.stringify(config));
+  }
+
+  // --- Compression Helpers ---
+
+  function compressData(text) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    return pako.gzip(data);
+  }
+
+  function decompressData(compressedData) {
+    const decompressed = pako.ungzip(compressedData);
+    const decoder = new TextDecoder();
+    return decoder.decode(decompressed);
+  }
+
+  // --- Encryption Helpers (AES-256-GCM via Web Crypto API) ---
+
+  async function generateEncryptionKey() {
+    return crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,  // extractable
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async function encryptData(key, data) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv },
+      key,
+      data
+    );
+    // Pack: [12-byte IV][encrypted data]
+    const result = new Uint8Array(iv.length + encrypted.byteLength);
+    result.set(iv);
+    result.set(new Uint8Array(encrypted), iv.length);
+    return result;
+  }
+
+  async function decryptData(key, packedData) {
+    const iv = packedData.slice(0, 12);
+    const ciphertext = packedData.slice(12);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv },
+      key,
+      ciphertext
+    );
+    return new Uint8Array(decrypted);
+  }
+
+  async function keyToBase64Url(key) {
+    const exported = await crypto.subtle.exportKey('raw', key);
+    const bytes = new Uint8Array(exported);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async function base64UrlToKey(base64url) {
+    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return crypto.subtle.importKey(
+      'raw',
+      bytes,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    );
+  }
+
+  function uint8ArrayToBase64(data) {
+    let binary = '';
+    data.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary);
+  }
+
+  function base64ToUint8Array(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  // --- Generate File ID ---
+
+  async function generateFileId(content) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content + Date.now().toString());
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = new Uint8Array(hash);
+    let hex = '';
+    hashArray.forEach(b => hex += b.toString(16).padStart(2, '0'));
+    return hex.substring(0, 12);
+  }
+
+  // --- GitHub API ---
+
+  async function pushToGitHub(config, fileId, base64Content) {
+    const url = `${GITHUB_API_BASE}/repos/${config.owner}/${config.repo}/contents/shared/${fileId}.enc`;
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${config.pat}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+      },
+      body: JSON.stringify({
+        message: `Add shared markdown: ${fileId}`,
+        content: base64Content,
+        branch: config.branch || 'main'
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `GitHub API error: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async function fetchFromGitHub(owner, repo, branch, fileId) {
+    const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/shared/${fileId}.enc`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Shared file not found (${response.status})`);
+    }
+    return response.text();
+  }
+
+  // --- Share Flow ---
+
+  async function shareMarkdown() {
+    const shareButton = document.getElementById('share-button');
+    const originalText = shareButton.innerHTML;
+
+    try {
+      const markdownContent = markdownEditor.value;
+      if (!markdownContent.trim()) {
+        alert('Nothing to share — the editor is empty.');
+        return;
+      }
+
+      // Check GitHub config
+      let config = loadGitHubConfig();
+      if (!config || !config.pat) {
+        openGitHubConfigModal();
+        return;
+      }
+
+      // Show progress
+      shareButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Sharing...';
+      shareButton.disabled = true;
+
+      // Step 1: Compress
+      const compressed = compressData(markdownContent);
+
+      // Step 2: Generate encryption key
+      const key = await generateEncryptionKey();
+
+      // Step 3: Encrypt
+      const encrypted = await encryptData(key, compressed);
+
+      // Step 4: Encode to base64 for GitHub storage
+      const base64Content = uint8ArrayToBase64(encrypted);
+
+      // Step 5: Generate file ID
+      const fileId = await generateFileId(markdownContent);
+
+      // Step 6: Push to GitHub
+      await pushToGitHub(config, fileId, btoa(base64Content));
+
+      // Step 7: Generate share URL
+      const keyString = await keyToBase64Url(key);
+      const shareUrl = `${SHARE_BASE_URL}?id=${fileId}#${keyString}`;
+
+      // Step 8: Show share result
+      showShareResult(shareUrl);
+
+      shareButton.innerHTML = '<i class="bi bi-check-lg"></i> Shared!';
+      setTimeout(() => { shareButton.innerHTML = originalText; }, 2000);
+      shareButton.disabled = false;
+
+    } catch (error) {
+      console.error('Share failed:', error);
+      alert('Share failed: ' + error.message);
+      shareButton.innerHTML = originalText;
+      shareButton.disabled = false;
+    }
+  }
+
+  // --- Load Shared Flow ---
+
+  async function loadSharedMarkdown() {
+    const params = new URLSearchParams(window.location.search);
+    const fileId = params.get('id');
+    const keyString = window.location.hash.substring(1); // Remove leading #
+
+    if (!fileId || !keyString) return;
+
+    try {
+      // Determine repo config from defaults (public repo, no PAT needed for reading)
+      const config = loadGitHubConfig() || {};
+      const owner = config.owner || 'ijbo';
+      const repo = config.repo || 'mdView';
+      const branch = config.branch || 'main';
+
+      // Show loading state
+      markdownPreview.innerHTML = '<div style="padding: 40px; text-align: center; opacity: 0.6;"><i class="bi bi-lock"></i> Decrypting shared content...</div>';
+      setViewMode('preview');
+
+      // Step 1: Fetch encrypted file from GitHub
+      const base64Content = await fetchFromGitHub(owner, repo, branch, fileId);
+
+      // Step 2: Decode from base64
+      const encrypted = base64ToUint8Array(base64Content);
+
+      // Step 3: Import decryption key
+      const key = await base64UrlToKey(keyString);
+
+      // Step 4: Decrypt
+      const compressed = await decryptData(key, encrypted);
+
+      // Step 5: Decompress
+      const markdownContent = decompressData(compressed);
+
+      // Step 6: Display in editor + preview
+      markdownEditor.value = markdownContent;
+      renderMarkdown();
+
+      // Step 7: Show read-only banner and switch to preview mode
+      setViewMode('preview');
+      showSharedBanner();
+
+    } catch (error) {
+      console.error('Failed to load shared markdown:', error);
+      markdownPreview.innerHTML = `<div style="padding: 40px; text-align: center;">
+        <h3 style="color: var(--color-danger-fg);">
+          <i class="bi bi-shield-exclamation"></i> Decryption Failed
+        </h3>
+        <p style="opacity: 0.7;">The link may be invalid, expired, or the key is incorrect.</p>
+        <p style="font-size: 13px; opacity: 0.5;">${error.message}</p>
+      </div>`;
+      setViewMode('preview');
+    }
+  }
+
+  // --- Shared View Banner ---
+
+  function showSharedBanner() {
+    const banner = document.getElementById('shared-view-banner');
+    banner.style.display = 'block';
+    document.body.classList.add('shared-view-active');
+    markdownEditor.readOnly = true;
+  }
+
+  function hideSharedBanner() {
+    const banner = document.getElementById('shared-view-banner');
+    banner.style.display = 'none';
+    document.body.classList.remove('shared-view-active');
+    markdownEditor.readOnly = false;
+  }
+
+  // Banner buttons
+  document.getElementById('shared-banner-edit').addEventListener('click', function () {
+    hideSharedBanner();
+    // Clear URL params to prevent re-loading shared content
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setViewMode('split');
+  });
+
+  document.getElementById('shared-banner-close').addEventListener('click', function () {
+    hideSharedBanner();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  });
+
+  // --- GitHub Config Modal ---
+
+  const githubConfigModal = document.getElementById('github-config-modal');
+  const shareResultModal = document.getElementById('share-result-modal');
+
+  function openGitHubConfigModal() {
+    const config = loadGitHubConfig() || {};
+    document.getElementById('github-pat').value = config.pat || '';
+    document.getElementById('github-owner').value = config.owner || 'ijbo';
+    document.getElementById('github-repo').value = config.repo || 'mdView';
+    document.getElementById('github-branch').value = config.branch || 'main';
+    githubConfigModal.classList.add('active');
+  }
+
+  function closeGitHubConfigModal() {
+    githubConfigModal.classList.remove('active');
+  }
+
+  document.getElementById('github-config-close').addEventListener('click', closeGitHubConfigModal);
+  document.getElementById('github-config-cancel').addEventListener('click', closeGitHubConfigModal);
+  githubConfigModal.addEventListener('click', function (e) {
+    if (e.target === githubConfigModal) closeGitHubConfigModal();
+  });
+
+  document.getElementById('github-config-save').addEventListener('click', function () {
+    const pat = document.getElementById('github-pat').value.trim();
+    const owner = document.getElementById('github-owner').value.trim();
+    const repo = document.getElementById('github-repo').value.trim();
+    const branch = document.getElementById('github-branch').value.trim();
+
+    if (!pat) {
+      alert('Personal Access Token is required.');
+      return;
+    }
+    if (!owner || !repo) {
+      alert('Repository owner and name are required.');
+      return;
+    }
+
+    saveGitHubConfig({ pat, owner, repo, branch: branch || 'main' });
+    closeGitHubConfigModal();
+
+    // Proceed with sharing after config is saved
+    shareMarkdown();
+  });
+
+  // --- Share Result Modal ---
+
+  function showShareResult(url) {
+    document.getElementById('share-link-input').value = url;
+    shareResultModal.classList.add('active');
+  }
+
+  function closeShareResultModal() {
+    shareResultModal.classList.remove('active');
+  }
+
+  document.getElementById('share-result-close').addEventListener('click', closeShareResultModal);
+  shareResultModal.addEventListener('click', function (e) {
+    if (e.target === shareResultModal) closeShareResultModal();
+  });
+
+  document.getElementById('copy-share-link').addEventListener('click', async function () {
+    const linkInput = document.getElementById('share-link-input');
+    const btn = this;
+    try {
+      await navigator.clipboard.writeText(linkInput.value);
+      btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+      setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 1500);
+    } catch (e) {
+      linkInput.select();
+      document.execCommand('copy');
+      btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+      setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 1500);
+    }
+  });
+
+  // --- Wire Up Share Buttons ---
+
+  document.getElementById('share-button').addEventListener('click', shareMarkdown);
+  document.getElementById('mobile-share-button').addEventListener('click', function () {
+    closeMobileMenu();
+    shareMarkdown();
+  });
+
+  // --- Auto-load shared content on page load ---
+  loadSharedMarkdown();
+
 });

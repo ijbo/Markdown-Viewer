@@ -1,9 +1,11 @@
 :root {
   --bg-color: #ffffff;
   --editor-bg: #f6f8fa;
-  --preview-bg: #ffffff; /* Preview background for light mode */
+  --preview-bg: #ffffff;
+  /* Preview background for light mode */
   --text-color: #24292e;
-  --preview-text-color: #24292e; /* Text color for preview in light mode */
+  --preview-text-color: #24292e;
+  /* Text color for preview in light mode */
   --border-color: #e1e4e8;
   --header-bg: #f6f8fa;
   --button-bg: #f6f8fa;
@@ -13,16 +15,20 @@
   --scrollbar-thumb: #c1c1c1;
   --scrollbar-track: #f1f1f1;
   --accent-color: #0366d6;
-  --table-bg: #ffffff; /* Table background for light mode */
-  --code-bg: #f6f8fa; /* Code block background for light mode */
+  --table-bg: #ffffff;
+  /* Table background for light mode */
+  --code-bg: #f6f8fa;
+  /* Code block background for light mode */
 }
 
 [data-theme="dark"] {
   --bg-color: #0d1117;
   --editor-bg: #161b22;
-  --preview-bg: #0d1117; /* Preview background for dark mode */
+  --preview-bg: #0d1117;
+  /* Preview background for dark mode */
   --text-color: #c9d1d9;
-  --preview-text-color: #c9d1d9; /* Text color for preview in dark mode */
+  --preview-text-color: #c9d1d9;
+  /* Text color for preview in dark mode */
   --border-color: #30363d;
   --header-bg: #161b22;
   --button-bg: #21262d;
@@ -32,8 +38,10 @@
   --scrollbar-thumb: #484f58;
   --scrollbar-track: #21262d;
   --accent-color: #58a6ff;
-  --table-bg: #161b22; /* Table background for dark mode */
-  --code-bg: #161b22; /* Code block background for dark mode */
+  --table-bg: #161b22;
+  /* Table background for dark mode */
+  --code-bg: #161b22;
+  /* Code block background for dark mode */
 }
 
 * {
@@ -72,7 +80,8 @@ body {
   overflow: hidden;
 }
 
-.editor-pane, .preview-pane {
+.editor-pane,
+.preview-pane {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
@@ -87,7 +96,8 @@ body {
 }
 
 .preview-pane {
-  background-color: var(--preview-bg); /* Using the new variable for preview background */
+  background-color: var(--preview-bg);
+  /* Using the new variable for preview background */
 }
 
 /* Custom scrollbar */
@@ -143,8 +153,10 @@ body {
 .markdown-body {
   padding: 20px;
   width: 100%;
-  background-color: var(--preview-bg); /* Ensuring the markdown content matches preview background */
-  color: var(--preview-text-color); /* Using specific text color for preview content */
+  background-color: var(--preview-bg);
+  /* Ensuring the markdown content matches preview background */
+  color: var(--preview-text-color);
+  /* Using specific text color for preview content */
 }
 
 /* Style tables in light mode */
@@ -243,7 +255,8 @@ body {
   color: var(--text-color);
 }
 
-.dropdown-item:hover, .dropdown-item:focus {
+.dropdown-item:hover,
+.dropdown-item:focus {
   background-color: var(--button-hover);
   color: var(--text-color);
 }
@@ -251,23 +264,24 @@ body {
 /* Responsive design for mobile */
 @media (max-width: 1080px) {
   .content-container {
-      flex-direction: column;
+    flex-direction: column;
   }
-  
-  .editor-pane, .preview-pane {
-      flex: none;
-      height: 50%;
-      border-right: none;
+
+  .editor-pane,
+  .preview-pane {
+    flex: none;
+    height: 50%;
+    border-right: none;
   }
-  
+
   .editor-pane {
-      border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
   }
-  
+
   .toolbar {
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
   }
 }
 
@@ -278,7 +292,7 @@ body {
 }
 
 /* Focus outline for accessibility */
-button:focus, 
+button:focus,
 a:focus {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
@@ -286,8 +300,13 @@ a:focus {
 
 /* Animation for copied message */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Tooltip styles */
@@ -342,7 +361,7 @@ a:focus {
   --color-canvas-subtle: #f6f8fa;
   --color-border-default: #e1e4e8;
   --color-border-muted: #eaecef;
-  --color-neutral-muted: rgba(175,184,193,0.2);
+  --color-neutral-muted: rgba(175, 184, 193, 0.2);
   --color-accent-fg: #0366d6;
   --color-accent-emphasis: #0366d6;
   --color-attention-subtle: #fff5b1;
@@ -389,10 +408,10 @@ a:focus {
   --color-canvas-subtle: #161b22;
   --color-border-default: #30363d;
   --color-border-muted: #21262d;
-  --color-neutral-muted: rgba(110,118,129,0.4);
+  --color-neutral-muted: rgba(110, 118, 129, 0.4);
   --color-accent-fg: #58a6ff;
   --color-accent-emphasis: #1f6feb;
-  --color-attention-subtle: rgba(187,128,9,0.15);
+  --color-attention-subtle: rgba(187, 128, 9, 0.15);
   --color-danger-fg: #f85149;
 }
 
@@ -402,7 +421,8 @@ a:focus {
 }
 
 [data-theme="dark"] .markdown-body table tr:nth-child(2n) {
-  background-color: #1c2128; /* Slightly lighter than base dark background */
+  background-color: #1c2128;
+  /* Slightly lighter than base dark background */
 }
 
 [data-theme="dark"] .markdown-body pre {
@@ -445,7 +465,7 @@ a:focus {
 
 .dropzone.active {
   border-color: var(--accent-color);
-  background-color: rgba(var(--accent-color), 0.05);
+  background-color: rgba(88, 166, 255, 0.05);
 }
 
 .dropzone p {
@@ -624,6 +644,7 @@ a:focus {
 
 /* hide desktop-only stats and toolbar on mobile */
 @media (max-width: 767px) {
+
   .stats-container.d-none.d-md-flex,
   .toolbar.d-none.d-md-flex {
     display: none !important;
@@ -711,7 +732,8 @@ a:focus {
   border-color: var(--accent-color);
   color: var(--accent-color);
   border-width: 2px;
-  padding: 5px 11px; /* Adjust for thicker border */
+  padding: 5px 11px;
+  /* Adjust for thicker border */
 }
 
 .view-mode-btn.active:not(:last-child) {
@@ -891,6 +913,7 @@ a:focus {
 
 /* On tablet/mobile, ensure single-pane modes take full height */
 @media (max-width: 1079px) {
+
   .content-container.view-editor-only .editor-pane,
   .content-container.view-preview-only .preview-pane {
     height: 100%;
@@ -1104,4 +1127,274 @@ a:focus {
 
 .mermaid-modal-controls .mermaid-toolbar-btn {
   opacity: 1;
+}
+
+/* ========================================
+   SHARE MODALS
+   ======================================== */
+
+.share-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.6);
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.share-modal.active {
+  display: flex;
+}
+
+.share-modal-content {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 420px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.2s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.share-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.share-modal-header h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+}
+
+.share-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.share-modal-close:hover {
+  background-color: var(--button-hover);
+}
+
+.share-modal-body {
+  padding: 20px;
+}
+
+.share-modal-desc {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+.share-form-group {
+  margin-bottom: 14px;
+}
+
+.share-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 4px;
+}
+
+.share-form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--editor-bg);
+  color: var(--text-color);
+  transition: border-color 0.2s ease;
+}
+
+.share-form-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.share-form-group small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+.share-form-group small a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.share-form-group small a:hover {
+  text-decoration: underline;
+}
+
+.share-form-group small code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background-color: var(--code-bg);
+  font-size: 11px;
+}
+
+.share-modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.share-btn-primary {
+  background-color: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.share-btn-primary:hover {
+  background-color: #4b94e8;
+}
+
+.share-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.share-btn-secondary {
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.share-btn-secondary:hover {
+  background-color: var(--button-hover);
+}
+
+/* Share Link Container */
+.share-link-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.share-link-container input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: monospace;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--editor-bg);
+  color: var(--text-color);
+}
+
+.share-link-container input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.share-link-note {
+  font-size: 12px;
+  color: var(--text-color);
+  opacity: 0.6;
+  display: block;
+}
+
+/* ========================================
+   SHARED VIEW BANNER
+   ======================================== */
+
+.shared-view-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1500;
+  background: linear-gradient(135deg, #1a7f37 0%, #238636 100%);
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+[data-theme="dark"] .shared-view-banner {
+  background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+}
+
+.shared-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.shared-banner-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.2s ease;
+  margin-left: 8px;
+}
+
+.shared-banner-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Push app content down when shared banner is visible */
+.shared-view-active .app-header {
+  margin-top: 40px;
 }
