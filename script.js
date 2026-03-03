@@ -1915,7 +1915,7 @@ This is a fully client-side application. Your content never leaves your browser 
   // ENCRYPTED SHARING VIA GITHUB
   // ========================================
 
-  const SHARE_BASE_URL = 'https://ijbo.github.io/mdView/';
+  const SHARE_BASE_URL = 'https://markdownview.github.io/';
   const GITHUB_API_BASE = 'https://api.github.com';
 
   // --- GitHub Config Management ---
@@ -2143,8 +2143,8 @@ This is a fully client-side application. Your content never leaves your browser 
     try {
       // Determine repo config from defaults (public repo, no PAT needed for reading)
       const config = loadGitHubConfig() || {};
-      const owner = config.owner || 'ijbo';
-      const repo = config.repo || 'mdView';
+      const owner = config.owner || 'markdownview';
+      const repo = config.repo || 'markdownview.github.io';
       const branch = config.branch || 'main';
 
       // Show loading state
@@ -2224,8 +2224,8 @@ This is a fully client-side application. Your content never leaves your browser 
   function openGitHubConfigModal() {
     const config = loadGitHubConfig() || {};
     document.getElementById('github-pat').value = config.pat || '';
-    document.getElementById('github-owner').value = config.owner || 'ijbo';
-    document.getElementById('github-repo').value = config.repo || 'mdView';
+    document.getElementById('github-owner').value = config.owner || 'markdownview';
+    document.getElementById('github-repo').value = config.repo || 'markdownview.github.io';
     document.getElementById('github-branch').value = config.branch || 'main';
     githubConfigModal.classList.add('active');
   }
